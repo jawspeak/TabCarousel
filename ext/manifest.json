@@ -1,11 +1,11 @@
 {
   "manifest_version": 2,
 
-  "name": "TabCarousel",
+  "name": "jawspeak-TabCarousel",
   "version": "0.5.3",
 
-  "description": "Cycle through your Chrome tabs automatically.  Great for monitoring information on a TV with a computer attached.",
-  "homepage_url": "http://github.com/benjaminoakes/TabCarousel",
+  "description": "Auto cycle through your Chrome tabs. Forked version of another app, to add scrolling window support for jira pages.",
+  "homepage_url": "https://github.com/jawspeak/TabCarousel",
 
   "icons": {
     "16": "images/icon_16.png",
