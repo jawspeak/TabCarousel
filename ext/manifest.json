@@ -2,7 +2,7 @@
   "manifest_version": 2,
 
   "name": "jawspeak-TabCarousel",
-  "version": "0.5.3",
+  "version": "0.5.4",
 
   "description": "Auto cycle through your Chrome tabs. Forked version of another app, to add scrolling window support for jira pages.",
   "homepage_url": "https://github.com/jawspeak/TabCarousel",
