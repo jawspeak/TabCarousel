@@ -32,6 +32,21 @@ var carousel = (function () {
    */
   ns.lastReloads_ms = {};
 
+  /** Track the current url that we are on. Don't query to get it b/c that would introduce a callback. */
+  ns.currentTabUrl = "";
+	ns.currentTabId = 0;
+
+  /** Is it on a Jira page? */
+  ns.isActiveJiraCardWallPage = function() {
+  	// ex: https://jira.corp.squareup.com/secure/RapidBoard.jspa?rapidView=279&view=detail&selectedIssue=PAY-2553
+    var result = ns.currentTabUrl.indexOf('jira.') >= 0
+			&& ns.currentTabUrl.indexOf('RapidBoard') > 0
+			&& ns.currentTabUrl.indexOf('view=report') < 0
+			&& ns.currentTabUrl.indexOf('view=plan') < 0;
+		console.log("    isActiveJiraCardWallPage: " + result);
+		return result;
+  };
+
   /**
    * Reload the given tab, if it has been more than ns.reloadWait_ms ago since it's last been reloaded.
    * @function
@@ -59,8 +74,14 @@ var carousel = (function () {
       var tab = tabs[count % tabs.length],
         nextTab = tabs[(count + 1) % tabs.length];
       chrome.tabs.update(tab.id, {selected: true});
+
       // checks and reloads the next tab
       ns.reload(nextTab.id);
+
+			console.log("select sets active tab: %s", tab.url);
+			// Grab the url and tab here, so we can determine elsewhere if we are on a jira page.
+      ns.currentTabUrl = tab.url;
+			ns.currentTabId = tab.id;
     });
   };
 
@@ -78,14 +99,32 @@ var carousel = (function () {
 
     chrome.browserAction.setIcon({path: 'images/icon_32_exp_1.75_stop_emblem.png'});
     chrome.browserAction.setTitle({title: 'Stop Carousel'});
-
-    continuation = function () {
+ 		continuation = function () {
+	    console.log("-- start continuation count=%i", count);
       ns.select(windowId, count);
       count += 1;
-      ns.lastTimeout = setTimeout(continuation, ms);
+      setTimeout(function() { // wait a bit since moving tabs is async.
+				if (ns.isActiveJiraCardWallPage()) {
+					console.log("will execute script and set timeout.");
+					chrome.tabs.executeScript(ns.currentTabId, // explicit tab if debugger window active.
+						{file: "javascripts/jira_page_content_script.js", runAt: "document_end"}, 
+						function(result) { 
+							if (result) {				
+								console.log("will scroll %s ms", result[0]);
+								ns.lastTimeout = setTimeout(continuation, result[0]);
+							} else {
+								console.log("WARN: undefined result from executeScript, setting default scroll.");
+								ns.lastTimeout = setTimeout(continuation, ms);
+							}
+						}
+					);
+				} else {
+					console.log("setting the timeout to rotate tabs normally.");
+	      	ns.lastTimeout = setTimeout(continuation, ms);
+				}
+			}, 100);
     };
-
-    continuation();
+		continuation();
   };
 
   /**
@@ -130,7 +169,7 @@ var carousel = (function () {
       return localStorage['flipWait_ms'] || ns.defaults.flipWait_ms;
     }
   };
-
+	
   /**
    * Accessor for user set reload wait timing or the default.
    * @function
