@@ -8,6 +8,7 @@ var SCROLL_PAUSE_AT_TOP_AND_BOTTOM_MS = 5000;
 var doScrolling = function() {
   var totalScroll = document.getElementById('main-area').clientHeight - window.innerHeight;
   var timeRequiredMs = totalScroll / SCROLL_STEP_PX * SCROLL_SLEEP_MS + SCROLL_PAUSE_AT_TOP_AND_BOTTOM_MS * 2;
+	window.scrollTo(0,0);
 	var currentScroll = 0;
   var scroller = function() {
     if (currentScroll >= totalScroll) {
