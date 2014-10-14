@@ -47,6 +47,14 @@ var carousel = (function () {
 		return result;
   };
 
+  /** Is it on our milestones scrolling page? */
+  ns.isActiveScrollingDashboardPage = function() {
+	  var result = ns.currentTabUrl.indexOf('milestones') >= 0
+			&& ns.currentTabUrl.indexOf(':3000') >= 0; // currently hostend on port 3000
+		console.log("    isActiveScrollingDashboardPage: " + result);
+		return result;			
+	}
+
   /**
    * Reload the given tab, if it has been more than ns.reloadWait_ms ago since it's last been reloaded.
    * @function
@@ -104,10 +112,17 @@ var carousel = (function () {
       ns.select(windowId, count);
       count += 1;
       setTimeout(function() { // wait a bit since moving tabs is async.
-				if (ns.isActiveJiraCardWallPage()) {
-					console.log("will execute script and set timeout.");
+				if (ns.isActiveJiraCardWallPage() || ns.isActiveScrollingDashboardPage()) {
+					var script_path;
+					if (ns.isActiveJiraCardWallPage()) {
+						console.log("will execute jira script and set timeout.");
+						script_path = "javascripts/jira_page_content_script.js";
+					} else if (ns.isActiveScrollingDashboardPage()) {
+						console.log("will execute milestones script and set timeout.");
+						script_path = "javascripts/milestones_page_content_script.js";
+					}
 					chrome.tabs.executeScript(ns.currentTabId, // explicit tab if debugger window active.
-						{file: "javascripts/jira_page_content_script.js", runAt: "document_end"}, 
+						{file: script_path, runAt: "document_end"}, 
 						function(result) { 
 							if (result) {				
 								console.log("will scroll %s ms", result[0]);
